@@ -1,0 +1,13 @@
+# GitHub Profile README Generator Requirements
+# No external dependencies required - uses only Python standard library
+
+# Optional: For enhanced functionality (if you want to extend the tool)
+# requests>=2.28.0  # For API calls to GitHub, shields.io, etc.
+# jinja2>=3.0.0     # For advanced templating
+# click>=8.0.0      # For enhanced CLI interface
+# colorama>=0.4.0   # For colored terminal output
+
+# Development dependencies (optional)
+# pytest>=7.0.0     # For testing
+# black>=22.0.0     # For code formatting
+# flake8>=4.0.0     # For linting 

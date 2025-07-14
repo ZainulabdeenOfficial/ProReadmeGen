@@ -1,0 +1,128 @@
+{
+  "basic_info": {
+    "name": "Alex Johnson",
+    "github_username": "alexjohnson",
+    "tagline": "Code. Create. Contribute. 🚀",
+    "typing_animation": "Full Stack Developer;Open Source Enthusiast;Problem Solver;Community Builder"
+  },
+  "about_me": {
+    "description": [
+      "🚀 Full-stack developer passionate about creating elegant solutions to complex problems",
+      "🌱 Open source enthusiast who believes in the power of collaborative development",
+      "📚 Lifelong learner always exploring new technologies and best practices"
+    ],
+    "quotes": [
+      "First solve the problem, then write the code.",
+      "Clean code always looks like it was written by someone who cares."
+    ]
+  },
+  "tech_stack": {
+    "languages": ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Java"],
+    "frameworks": ["React", "Next.js", "Node.js", "Express", "Django", "FastAPI", "Vue.js"],
+    "cloud_devops": ["AWS", "Docker", "Kubernetes", "Terraform", "GitHub Actions", "Jenkins"],
+    "tools_editors": ["VSCode", "Vim", "Git", "Postman", "Figma", "Notion"]
+  },
+  "currently": {
+    "working_on": "Building an AI-powered code review tool",
+    "learning": "WebAssembly and advanced system design patterns", 
+    "collaborating": "Open source projects that make developers' lives easier",
+    "exploring": "Serverless architectures and edge computing",
+    "reach_me": "alex@example.com or @alexjohnson on Twitter"
+  },
+  "social_links": {
+    "portfolio": "https://alexjohnson.dev",
+    "email": "alex@example.com",
+    "linkedin": "https://linkedin.com/in/alexjohnson",
+    "twitter": "https://twitter.com/alexjohnson",
+    "blog": "https://dev.to/alexjohnson",
+    "buymeacoffee": "https://buymeacoffee.com/alexjohnson"
+  },
+  "pinned_projects": [
+    {
+      "name": "🚀 CodeReview AI",
+      "description": "AI-powered code review assistant that provides intelligent feedback",
+      "tech_stack": ["TypeScript", "OpenAI API", "React", "Node.js"],
+      "live_url": "https://codereview-ai.dev",
+      "repo_url": "https://github.com/alexjohnson/codereview-ai",
+      "stars": 245
+    },
+    {
+      "name": "🎨 Component Library",
+      "description": "Accessible, customizable React component library with TypeScript",
+      "tech_stack": ["React", "TypeScript", "Storybook", "CSS-in-JS"],
+      "live_url": "https://components.alexjohnson.dev",
+      "repo_url": "https://github.com/alexjohnson/react-components",
+      "stars": 128
+    },
+    {
+      "name": "🤖 DevOps Automation",
+      "description": "Collection of scripts and tools for streamlining DevOps workflows",
+      "tech_stack": ["Python", "Bash", "Docker", "GitHub Actions"],
+      "live_url": null,
+      "repo_url": "https://github.com/alexjohnson/devops-automation",
+      "stars": 89
+    }
+  ],
+  "custom_sections": {
+    "coding_principles": [
+      "Write once. Refactor twice. Document always.",
+      "Code for humans, optimize for machines.",
+      "Test early, test often, test everything."
+    ],
+    "weekly_schedule": {
+      "Monday": "Documentation & Planning",
+      "Tuesday": "Content Creation & Learning",
+      "Wednesday": "Open Source Contributions", 
+      "Thursday": "Live Building & Streaming",
+      "Friday": "Experimentation & Research"
+    },
+    "milestones": [
+      {
+        "year": "2019",
+        "achievement": "Started my coding journey with JavaScript"
+      },
+      {
+        "year": "2020", 
+        "achievement": "Created my first open-source project"
+      },
+      {
+        "year": "2021",
+        "achievement": "Joined my first tech company as a junior developer"
+      },
+      {
+        "year": "2022",
+        "achievement": "Built an AI-powered development tool"
+      },
+      {
+        "year": "2023",
+        "achievement": "Reached 1000+ GitHub contributions"
+      },
+      {
+        "year": "2024",
+        "achievement": "Spoke at my first tech conference"
+      }
+    ],
+    "fun_facts": [
+      "🎮 I built my first game at age 12",
+      "⌨️ I collect vintage mechanical keyboards",
+      "🌍 I've contributed to projects in 8+ programming languages",
+      "☕ I can't code without coffee (seriously!)",
+      "🎵 I code to lo-fi hip hop exclusively",
+      "🏃‍♂️ I debug best while walking"
+    ],
+    "goals_2025": [
+      "🚀 Release 3 major open-source projects",
+      "🎤 Speak at 2 tech conferences",
+      "🧑‍🎓 Mentor 10 new developers",
+      "📚 Write 50 technical blog posts",
+      "🌟 Reach 5000 GitHub stars across projects"
+    ]
+  },
+  "preferences": {
+    "theme": "dark",
+    "badge_style": "flat-square",
+    "include_snake_animation": true,
+    "include_visitor_count": true,
+    "include_typing_animation": true
+  }
+} 
