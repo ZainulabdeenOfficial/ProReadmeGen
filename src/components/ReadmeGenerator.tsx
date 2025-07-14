@@ -10,9 +10,15 @@ import {
   getTopRepositories, 
   calculateLanguageStats,
   generateGitHubStatsImageUrl,
+  generateAlternativeGitHubStatsUrl,
+  generateGitHubStatsAlternative2,
   generateLanguageStatsImageUrl,
   generateStreakStatsImageUrl,
+  generateAlternativeStreakStatsUrl,
+  generateStreakStatsBackup,
   generateTrophyImageUrl,
+  generateAlternativeTrophyUrl,
+  generateTrophyBackupUrl,
   generateActivityGraphImageUrl,
   generateVisitorCountImageUrl,
   generateTypingImageUrl,
@@ -28,6 +34,8 @@ import {
   formatUserJoinDate,
   generateProfileBannerUrl,
   generateEnhancedTypingImageUrl,
+  generateAlternativeTypingImageUrl,
+  generateTypingImageBackup,
   generate3DContributionUrl,
   generateAlternative3DContributionUrl,
   generateAdvancedMetricsUrl,
@@ -38,6 +46,11 @@ import {
   generateSnakeAnimationBackup,
   detectFrameworksAndTools
 } from '@/lib/github'
+
+// Utility function to escape URLs for XML/HTML context
+function escapeUrlForXml(url: string): string {
+  return url.replace(/&/g, '&amp;')
+}
 import { generateDynamicEmojis, generateRandomQuote, generateJoke } from '@/lib/emojiGenerator'
 import { getRandomQuote } from '@/lib/quotes'
 import { getFollowersReadmeSection } from './RecentFollowers'
@@ -262,19 +275,19 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     
     // Primary Profile Banner with Custom Colors
     if (config.includeProfileBanner) {
-      const bannerUrl = `https://capsule-render.vercel.app/api?type=waving&color=${config.sectionColors.banner.replace('#', '')}&height=200&section=header&text=${encodeURIComponent(user.name || user.login)}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=${encodeURIComponent(user.bio || 'Developer & Creator')}&descAlignY=60&descAlign=50`
-      content += `![Profile Banner](${bannerUrl})\n\n`
+      const bannerUrl = escapeUrlForXml(`https://capsule-render.vercel.app/api?type=waving&color=${config.sectionColors.banner.replace('#', '')}&height=200&section=header&text=${encodeURIComponent(user.name || user.login)}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=${encodeURIComponent(user.bio || 'Developer & Creator')}&descAlignY=60&descAlign=50`)
+      content += `![GitHub Banner](${bannerUrl})\n\n`
     }
     
     // Secondary Wave Animation Banner
     if (config.includeWaveAnimation) {
-      const waveUrl = `https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header&text=Welcome%20to%20my%20GitHub&fontSize=30&fontColor=fff&animation=twinkling&fontAlignY=40`
+      const waveUrl = escapeUrlForXml(`https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header&text=Welcome%20to%20my%20GitHub&fontSize=30&fontColor=fff&animation=twinkling&fontAlignY=40`)
       content += `![Wave Animation](${waveUrl})\n\n`
     }
     
     // Fire Animation Header
     if (config.includeFireAnimation) {
-      content += `![Fire Animation](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=F75C7E&center=true&vCenter=true&width=600&lines=🔥+AMAZING+DEVELOPER+🔥;💻+CODING+WIZARD+💻;🚀+OPEN+SOURCE+HERO+🚀;✨+INNOVATION+ENTHUSIAST+✨)\n\n`
+      content += `![Fire Animation](${escapeUrlForXml('https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=F75C7E&center=true&vCenter=true&width=600&lines=🔥+AMAZING+DEVELOPER+🔥;💻+CODING+WIZARD+💻;🚀+OPEN+SOURCE+HERO+🚀;✨+INNOVATION+ENTHUSIAST+✨')})\n\n`
     }
     
     content += `</div>\n\n`
@@ -282,7 +295,7 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     // Enhanced Main Title with Emojis
     content += `# ${emojiProfile.greeting} ${emojiProfile.personalityEmojis.join(' ')}\n\n`
     
-    // Typing Animation with Multiple Dynamic Lines
+    // Typing Animation with Multiple Dynamic Lines and Fallbacks
     if (config.includeTypingAnimation) {
       const typingTexts = [
         `${emojiProfile.codingStatus}`,
@@ -295,7 +308,15 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
         `🛠️+Code+Craftsman`
       ]
       content += `<div align="center">\n\n`
+      
+      // Primary typing service
       content += `![Typing SVG](${generateEnhancedTypingImageUrl(typingTexts, config.theme)})\n\n`
+      
+      // Alternative typing services as fallbacks
+      content += `<!-- Alternative Typing Services for better reliability -->\n`
+      content += `![Alternative Typing](${generateAlternativeTypingImageUrl(typingTexts, config.theme)})\n\n`
+      content += `![Backup Typing](${generateTypingImageBackup(typingTexts, config.theme)})\n\n`
+      
       content += `</div>\n\n`
     }
 
@@ -466,35 +487,46 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `\n</div>\n\n`
     }
 
-    // Enhanced GitHub Stats with Custom Colors
+    // Enhanced GitHub Stats with Custom Colors and Multiple Fallbacks
     if (config.includeStats) {
       content += `## ${emojiProfile.statsEmoji} GitHub Statistics\n\n`
       content += `<div align="center">\n\n`
       
-      // Custom stats URL with user-selected colors
+      // Primary GitHub Stats Service
       const statsColor = config.sectionColors.stats.replace('#', '')
       const languagesColor = config.sectionColors.languages.replace('#', '')
-      const customStatsUrl = `https://github-readme-stats.vercel.app/api?username=${user.login}&show_icons=true&count_private=true&theme=${config.theme}&title_color=${statsColor}&icon_color=${statsColor}&text_color=${statsColor}&bg_color=00000000&hide_border=true&include_all_commits=true&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage`
+      const customStatsUrl = escapeUrlForXml(`https://github-readme-stats.vercel.app/api?username=${user.login}&show_icons=true&count_private=true&theme=${config.theme}&title_color=${statsColor}&icon_color=${statsColor}&text_color=${statsColor}&bg_color=00000000&hide_border=true&include_all_commits=true&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage`)
       
       content += `<img height="180em" src="${customStatsUrl}" alt="GitHub Stats" />\n`
       
+      // Alternative GitHub Stats Services (Fallbacks)
+      content += `<!-- Alternative GitHub Stats Services for better reliability -->\n`
+      content += `<img height="180em" src="${generateAlternativeGitHubStatsUrl(user.login, config.theme)}" alt="GitHub Stats Alternative" />\n`
+      content += `<img height="180em" src="${generateGitHubStatsAlternative2(user.login, config.theme)}" alt="GitHub Stats Backup" />\n`
+      
       if (config.includeLanguages) {
-        const customLanguagesUrl = `https://github-readme-stats.vercel.app/api/top-langs/?username=${user.login}&layout=compact&theme=${config.theme}&title_color=${languagesColor}&text_color=${languagesColor}&bg_color=00000000&hide_border=true&langs_count=10&exclude_repo=github-readme-stats`
+        const customLanguagesUrl = escapeUrlForXml(`https://github-readme-stats.vercel.app/api/top-langs/?username=${user.login}&layout=compact&theme=${config.theme}&title_color=${languagesColor}&text_color=${languagesColor}&bg_color=00000000&hide_border=true&langs_count=10&exclude_repo=github-readme-stats`)
         content += `<img height="180em" src="${customLanguagesUrl}" alt="Top Languages" />\n\n`
       }
       content += `</div>\n\n`
     }
 
-    // Enhanced GitHub Streaks with Custom Colors
+    // Enhanced GitHub Streaks with Custom Colors and Multiple Fallbacks
     if (config.includeStreaks) {
       content += `## ${emojiProfile.streakEmoji} GitHub Streaks & Achievements\n\n`
       content += `<div align="center">\n\n`
       
-      // Custom streak URL with user-selected colors
+      // Primary streak service with custom colors
       const streakColor = config.sectionColors.streak.replace('#', '')
-      const customStreakUrl = `https://github-readme-streak-stats.herokuapp.com/?user=${user.login}&theme=${config.theme}&fire=${streakColor}&ring=${streakColor}&currStreakLabel=${streakColor}&sideNums=${streakColor}&sideLabels=${streakColor}&dates=${streakColor}&background=00000000&border=FFFFFF00&stroke=FFFFFF00`
+      const customStreakUrl = escapeUrlForXml(`https://github-readme-streak-stats.herokuapp.com/?user=${user.login}&theme=${config.theme}&fire=${streakColor}&ring=${streakColor}&currStreakLabel=${streakColor}&sideNums=${streakColor}&sideLabels=${streakColor}&dates=${streakColor}&background=00000000&border=FFFFFF00&stroke=FFFFFF00`)
       
       content += `<img src="${customStreakUrl}" alt="GitHub Streak" />\n\n`
+      
+      // Alternative streak services (Fallbacks)
+      content += `<!-- Alternative Streak Services for better reliability -->\n`
+      content += `<img src="${generateAlternativeStreakStatsUrl(user.login, config.theme)}" alt="Alternative Streak Stats" />\n\n`
+      content += `<img src="${generateStreakStatsBackup(user.login, config.theme)}" alt="Backup Streak Stats" />\n\n`
+      
       content += `</div>\n\n`
     }
 
@@ -505,24 +537,29 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       
       // Custom contribution graph with user-selected background colors
       const contributionColor = config.sectionColors.contribution.replace('#', '')
-      const customGraphUrl = `https://github-readme-activity-graph.vercel.app/graph?username=${user.login}&theme=${config.theme}&area=true&hide_border=true&custom_title=Contribution%20Graph&line=${contributionColor}&point=${contributionColor}&area_color=${contributionColor}40&title_color=${contributionColor}&color=${contributionColor}&bg_color=${config.sectionColors.graph.replace('#', '')}20`
+      const customGraphUrl = escapeUrlForXml(`https://github-readme-activity-graph.vercel.app/graph?username=${user.login}&theme=${config.theme}&area=true&hide_border=true&custom_title=Contribution%20Graph&line=${contributionColor}&point=${contributionColor}&area_color=${contributionColor}40&title_color=${contributionColor}&color=${contributionColor}&bg_color=${config.sectionColors.graph.replace('#', '')}20`)
       
       content += `![Activity Graph](${customGraphUrl})\n\n`
       content += `</div>\n\n`
     }
 
-    // GitHub Metrics with Enhanced Emoji Support and Multiple Options
+    // GitHub Metrics with Enhanced Emoji Support and Multiple Reliable Options
     if (config.includeGitHubMetrics) {
       content += `## 📊 GitHub Metrics Dashboard\n\n`
       content += `<div align="center">\n\n`
       
-      // Enhanced GitHub Stats (Primary)
+      // Primary GitHub Stats Service
       content += `![GitHub Stats](${generateGitHubMetricsUrl(user.login, config.theme)})\n\n`
       
-      // Comprehensive Statistics (Secondary)
+      // Alternative GitHub Metrics Services
+      content += `<!-- Alternative GitHub Metrics for better reliability -->\n`
+      content += `![Alternative Stats](${generateAlternativeGitHubStatsUrl(user.login, config.theme)})\n\n`
+      content += `![Backup Stats](${generateGitHubStatsAlternative2(user.login, config.theme)})\n\n`
+      
+      // Comprehensive Statistics 
       content += `![Comprehensive Stats](${generateComprehensiveStatsUrl(user.login, config.theme)})\n\n`
       
-      // Advanced Profile Summary (Third option)
+      // Advanced Profile Summary
       content += `![Profile Summary](${generateAdvancedMetricsUrl(user.login, config.theme)})\n\n`
       
       content += `</div>\n\n`
@@ -580,7 +617,7 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
         config.spotifyConfig.playlists.forEach((playlistUrl, index) => {
           if (playlistUrl.trim()) {
             const playlistId = playlistUrl.split('/').pop()?.split('?')[0]
-            content += `[![Playlist ${index + 1}](https://img.shields.io/badge/🎵%20Playlist%20${index + 1}-1DB954?style=for-the-badge&logo=spotify&logoColor=white)](${playlistUrl})\n`
+            content += `[![Playlist ${index + 1}](${escapeUrlForXml(`https://img.shields.io/badge/🎵%20Playlist%20${index + 1}-1DB954?style=for-the-badge&logo=spotify&logoColor=white`)})](${playlistUrl})\n`
           }
         })
         content += `\n</div>\n\n`
@@ -637,7 +674,15 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     if (config.includeTrophies) {
       content += `## ${emojiProfile.trophyEmoji} GitHub Achievements\n\n`
       content += `<div align="center">\n\n`
+      
+      // Primary trophy service
       content += `![GitHub Trophies](${generateTrophyImageUrl(user.login, config.theme)})\n\n`
+      
+      // Alternative trophy services (Fallbacks)
+      content += `<!-- Alternative Trophy Services for better reliability -->\n`
+      content += `![Alternative Trophies](${generateAlternativeTrophyUrl(user.login, config.theme)})\n\n`
+      content += `![Backup Trophies](${generateTrophyBackupUrl(user.login, config.theme)})\n\n`
+      
       content += `</div>\n\n`
     }
 
@@ -650,12 +695,12 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       topRepos.slice(0, 6).forEach((repo, index) => {
         if (index % 2 === 0) {
           content += `<a href="${repo.html_url}" target="_blank">\n`
-          content += `  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=${user.login}&repo=${repo.name}&theme=${config.theme}&hide_border=true&bg_color=00000000" />\n`
+          content += `  <img align="center" src="${escapeUrlForXml(`https://github-readme-stats.vercel.app/api/pin/?username=${user.login}&repo=${repo.name}&theme=${config.theme}&hide_border=true&bg_color=00000000`)}" />\n`
           content += `</a>\n`
         }
         if (index % 2 === 1) {
           content += `<a href="${repo.html_url}" target="_blank">\n`
-          content += `  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=${user.login}&repo=${repo.name}&theme=${config.theme}&hide_border=true&bg_color=00000000" />\n`
+          content += `  <img align="center" src="${escapeUrlForXml(`https://github-readme-stats.vercel.app/api/pin/?username=${user.login}&repo=${repo.name}&theme=${config.theme}&hide_border=true&bg_color=00000000`)}" />\n`
           content += `</a>\n\n`
         }
       })
@@ -673,11 +718,13 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
         content += `### 🌟 Thanks for visiting my profile!\n\n`
         content += `<p>\n`
         content += `<a href="https://github.com/${user.login}?tab=followers" target="_blank">\n`
-        content += `<img src="https://img.shields.io/github/followers/${user.login}?label=Follow%20@${user.login}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue" alt="Follow ${user.login}"/>\n`
+        content += `<img src="${escapeUrlForXml(`https://img.shields.io/github/followers/${user.login}?label=Follow%20@${user.login}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`)}" alt="Follow ${user.login}"/>\n`
         content += `</a>\n`
         content += `</p>\n\n`
         content += `<p>\n`
-        content += `<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=👋+Welcome+to+my+GitHub+profile!;🚀+Let's+connect+and+collaborate!;💻+Always+excited+to+meet+fellow+developers!" alt="Typing SVG" />\n`
+        content += `<img src="${escapeUrlForXml('https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=👋+Welcome+to+my+GitHub+profile!;🚀+Check+out+my+latest+projects;💻+Always+learning+something+new;📫+Feel+free+to+reach+out!')}" alt="Typing SVG" />\n`
+        content += `<!-- Alternative Typing SVG for better reliability -->\n`
+        content += `<img src="${escapeUrlForXml('https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=👋+Welcome+to+my+GitHub+profile!;🚀+Check+out+my+latest+projects;💻+Always+learning+something+new;📫+Feel+free+to+reach+out!')}" alt="Alternative Typing SVG" />\n`
         content += `</p>\n\n`
         content += `</div>\n\n`
       }
@@ -702,16 +749,16 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     
     // Enhanced connection section
     if (user.blog) {
-      content += `[![Website](https://img.shields.io/badge/🌐%20Website-FF5722?style=for-the-badge&logo=google-chrome&logoColor=white)](${user.blog}) `
+      content += `[![Website](${escapeUrlForXml(`https://img.shields.io/badge/🌐%20Website-FF5722?style=for-the-badge&logo=google-chrome&logoColor=white`)})](${user.blog}) `
     }
     if (user.twitter_username) {
-      content += `[![Twitter](https://img.shields.io/badge/🐦%20Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${user.twitter_username}) `
+      content += `[![Twitter](${escapeUrlForXml(`https://img.shields.io/badge/🐦%20Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white`)})](https://twitter.com/${user.twitter_username}) `
     }
-    content += `[![LinkedIn](https://img.shields.io/badge/💼%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${user.login}) `
-    content += `[![GitHub](https://img.shields.io/badge/🐙%20GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${user.login})\n\n`
+    content += `[![LinkedIn](${escapeUrlForXml(`https://img.shields.io/badge/💼%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white`)})](https://linkedin.com/in/${user.login}) `
+    content += `[![GitHub](${escapeUrlForXml(`https://img.shields.io/badge/🐙%20GitHub-100000?style=for-the-badge&logo=github&logoColor=white`)})](https://github.com/${user.login})\n\n`
 
-    // Enhanced footer wave animation
-    content += `![Footer Wave](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer&text=Thanks%20for%20visiting!&fontSize=20&fontColor=fff&animation=fadeIn)\n\n`
+    // Footer with animated banner
+    content += `![Footer Wave](${escapeUrlForXml('https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer&text=Thanks%20for%20visiting!&fontSize=20&fontColor=fff&animation=fadeIn')})\n\n`
     
     // Custom footer GIF
     if (config.includeCustomGifs && config.gifConfig.footerGif) {
@@ -720,8 +767,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     
     // Footer statistics
     content += `![Profile Views](${generateProfileViewsUrl(user.login)}) `
-    content += `![GitHub Followers](https://img.shields.io/github/followers/${user.login}?style=social&label=Follow) `
-    content += `![GitHub Stars](https://img.shields.io/github/stars/${user.login}?style=social&label=Stars)\n\n`
+    content += `![GitHub Followers](${escapeUrlForXml(`https://img.shields.io/github/followers/${user.login}?style=social&label=Follow`)}) `
+    content += `![GitHub Stars](${escapeUrlForXml(`https://img.shields.io/github/stars/${user.login}?style=social&label=Stars`)})\n\n`
     
     // Inspirational footer message
     content += `### ✨ "Code is poetry written in logic" ✨\n\n`

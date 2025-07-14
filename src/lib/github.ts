@@ -3,6 +3,11 @@ import { GitHubUser, GitHubRepository, GitHubStats, LanguageStats } from '@/type
 
 const GITHUB_API_BASE = 'https://api.github.com'
 
+// Utility function to escape URLs for XML/HTML context
+function escapeUrlForXml(url: string): string {
+  return url.replace(/&/g, '&amp;')
+}
+
 // GitHub API client with optional token
 const githubApi = axios.create({
   baseURL: GITHUB_API_BASE,
@@ -155,7 +160,7 @@ export function formatUserJoinDate(dateString: string): string {
   })
 }
 
-// Advanced: Generate GitHub stats with extended theme support
+// Advanced: Generate GitHub stats with extended theme support and fallback services
 export function generateGitHubStatsImageUrl(username: string, theme: string = 'dark'): string {
   const extendedThemeMap: { [key: string]: string } = {
     'dark': 'dark',
@@ -186,7 +191,20 @@ export function generateGitHubStatsImageUrl(username: string, theme: string = 'd
   }
   
   const mappedTheme = extendedThemeMap[theme] || 'dark'
-  return `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${mappedTheme}&count_private=true&hide_border=true&bg_color=00000000&title_color=ffffff&text_color=ffffff&icon_color=58a6ff&ring_color=58a6ff&include_all_commits=true`
+  const url = `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${mappedTheme}&count_private=true&hide_border=true&bg_color=00000000&title_color=ffffff&text_color=ffffff&icon_color=58a6ff&ring_color=58a6ff&include_all_commits=true`
+  return escapeUrlForXml(url)
+}
+
+// Alternative GitHub Stats Service (Fallback)
+export function generateAlternativeGitHubStatsUrl(username: string, theme: string = 'dark'): string {
+  const url = `https://github-readme-stats-sigma-five.vercel.app/api?username=${username}&show_icons=true&theme=${theme}&count_private=true&hide_border=true&bg_color=00000000&include_all_commits=true`
+  return escapeUrlForXml(url)
+}
+
+// GitHub Stats Card Alternative (Uses different service)
+export function generateGitHubStatsAlternative2(username: string, theme: string = 'dark'): string {
+  const url = `https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api?username=${username}&show_icons=true&theme=${theme}&count_private=true&hide_border=true&bg_color=00000000`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate language stats with premium styling
@@ -222,10 +240,11 @@ export function generateLanguageStatsImageUrl(username: string, theme: string = 
   const mappedTheme = extendedThemeMap[theme] || 'dark'
   
   // Enhanced language stats with better visibility and more languages
-  return `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=donut&theme=${mappedTheme}&hide_border=true&langs_count=12&size_weight=0.5&count_weight=0.5&card_width=320&hide=html,css,scss,less`
+  const url = `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=donut&theme=${mappedTheme}&hide_border=true&langs_count=12&size_weight=0.5&count_weight=0.5&card_width=320&hide=html,css,scss,less`
+  return escapeUrlForXml(url)
 }
 
-// Advanced: Generate streak stats with enhanced styling
+// Advanced: Generate streak stats with enhanced styling and fallback services
 export function generateStreakStatsImageUrl(username: string, theme: string = 'dark'): string {
   const extendedThemeMap: { [key: string]: string } = {
     'dark': 'dark',
@@ -256,10 +275,23 @@ export function generateStreakStatsImageUrl(username: string, theme: string = 'd
   }
   
   const mappedTheme = extendedThemeMap[theme] || 'dark'
-  return `https://github-readme-streak-stats.herokuapp.com?user=${username}&theme=${mappedTheme}&hide_border=true&background=00000000&fire=ff6b6b&ring=4ecdc4&currStreakLabel=4ecdc4`
+  const url = `https://github-readme-streak-stats.herokuapp.com?user=${username}&theme=${mappedTheme}&hide_border=true&background=00000000&fire=ff6b6b&ring=4ecdc4&currStreakLabel=4ecdc4`
+  return escapeUrlForXml(url)
 }
 
-// Advanced: Generate enhanced typing animation with better emoji support
+// Alternative Streak Stats Service (More reliable)
+export function generateAlternativeStreakStatsUrl(username: string, theme: string = 'dark'): string {
+  const url = `https://streak-stats.demolab.com/?user=${username}&theme=${theme}&hide_border=true&background=00000000`
+  return escapeUrlForXml(url)
+}
+
+// Streak Stats Fallback Service 
+export function generateStreakStatsBackup(username: string, theme: string = 'dark'): string {
+  const url = `https://github-readme-streak-stats-salesp07.vercel.app/?user=${username}&theme=${theme}&hide_border=true&background=00000000`
+  return escapeUrlForXml(url)
+}
+
+// Advanced: Generate enhanced typing animation with better emoji support and fallbacks
 export function generateEnhancedTypingImageUrl(texts: string[], theme: string = 'dark'): string {
   const themeColors: { [key: string]: string } = {
     'dark': '58a6ff',
@@ -292,7 +324,39 @@ export function generateEnhancedTypingImageUrl(texts: string[], theme: string = 
   const color = themeColors[theme] || '58a6ff'
   const encodedTexts = texts.join(';').replace(/\s+/g, '+')
   
-  return `https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=4000&pause=1000&color=${color}&width=600&lines=${encodedTexts}&center=true&vCenter=true&multiline=false&repeat=true`
+  const url = `https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=4000&pause=1000&color=${color}&width=600&lines=${encodedTexts}&center=true&vCenter=true&multiline=false&repeat=true`
+  return escapeUrlForXml(url)
+}
+
+// Alternative Typing SVG Service (More reliable)
+export function generateAlternativeTypingImageUrl(texts: string[], theme: string = 'dark'): string {
+  const themeColors: { [key: string]: string } = {
+    'dark': '58a6ff',
+    'light': '0969da',
+    'tokyonight': '7aa2f7',
+    'radical': 'fe428e',
+    'dracula': 'ff79c6',
+    'gruvbox': 'fabd2f',
+    'cobalt': '1f9ede',
+    'synthwave': 'ff6ac1',
+    'highcontrast': 'ffffff',
+    'ocean': '409eff'
+  }
+  
+  const color = themeColors[theme] || '58a6ff'
+  const encodedTexts = texts.join(';').replace(/\s+/g, '+')
+  
+  const url = `https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=4000&pause=1000&color=${color}&width=600&lines=${encodedTexts}&center=true&vCenter=true&multiline=false&repeat=true`
+  return escapeUrlForXml(url)
+}
+
+// Typing SVG Backup Service
+export function generateTypingImageBackup(texts: string[], theme: string = 'dark'): string {
+  const color = theme === 'light' ? '0969da' : '58a6ff'
+  const encodedTexts = texts.join(';').replace(/\s+/g, '+')
+  
+  const url = `https://typing-svg.demolab.com/to-svg?font=Fira+Code&size=22&duration=4000&pause=1000&color=${color}&width=600&lines=${encodedTexts}&center=true&vCenter=true&repeat=true`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate profile banner with custom styling
@@ -313,7 +377,8 @@ export function generateProfileBannerUrl(username: string, theme: string = 'dark
   const bgColor = themeColors[theme] || '0d1117'
   const text = customText || `Welcome to ${username}'s Profile`
   
-  return `https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=${encodeURIComponent(text)}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Developer%20%26%20Creator&descAlignY=60&descAlign=50`
+  const url = `https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=${encodeURIComponent(text)}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Developer%20%26%20Creator&descAlignY=60&descAlign=50`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate repository cards with themes
@@ -347,7 +412,8 @@ export function generateRepoCardUrl(username: string, repo: string, theme: strin
   }
   
   const mappedTheme = extendedThemeMap[theme] || 'dark'
-  return `https://github-readme-stats.vercel.app/api/pin/?username=${username}&repo=${repo}&theme=${mappedTheme}&hide_border=true&bg_color=00000000&show_owner=true`
+  const url = `https://github-readme-stats.vercel.app/api/pin/?username=${username}&repo=${repo}&theme=${mappedTheme}&hide_border=true&bg_color=00000000&show_owner=true`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate 3D contribution calendar with fallback options
@@ -392,7 +458,8 @@ export function generateAlternative3DContributionUrl(username: string, theme: st
   
   const calendarTheme = themeColors[theme] || 'dark'
   // Alternative service using contribution graph
-  return `https://github-readme-activity-graph.vercel.app/graph?username=${username}&bg_color=00000000&color=58a6ff&line=58a6ff&point=58a6ff&area=true&hide_border=true&theme=${calendarTheme}`
+  const url = `https://github-readme-activity-graph.vercel.app/graph?username=${username}&bg_color=00000000&color=58a6ff&line=58a6ff&point=58a6ff&area=true&hide_border=true&theme=${calendarTheme}`
+  return escapeUrlForXml(url)
 }
 
 // Enhanced metrics with multiple options
@@ -403,7 +470,8 @@ export function generateAdvancedMetricsUrl(username: string, theme: string = 'da
 
 // Comprehensive GitHub statistics
 export function generateComprehensiveStatsUrl(username: string, theme: string = 'dark'): string {
-  return `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&count_private=true&theme=${theme}&include_all_commits=true&hide_border=true&bg_color=00000000&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage&line_height=27&custom_title=📊%20Comprehensive%20GitHub%20Statistics`
+  const url = `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&count_private=true&theme=${theme}&include_all_commits=true&hide_border=true&bg_color=00000000&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage&line_height=27&custom_title=📊%20Comprehensive%20GitHub%20Statistics`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate coding time widget
@@ -422,7 +490,8 @@ export function generateCodingTimeWidget(username: string, theme: string = 'dark
   }
   
   const widgetTheme = themeColors[theme] || 'dark'
-  return `https://github-readme-stats.vercel.app/api/wakatime?username=${username}&theme=${widgetTheme}&layout=compact&hide_border=true&bg_color=00000000`
+  const url = `https://github-readme-stats.vercel.app/api/wakatime?username=${username}&theme=${widgetTheme}&layout=compact&hide_border=true&bg_color=00000000`
+  return escapeUrlForXml(url)
 }
 
 export function generateTrophyImageUrl(username: string, theme: string = 'dark'): string {
@@ -431,11 +500,21 @@ export function generateTrophyImageUrl(username: string, theme: string = 'dark')
     theme,
     'no-frame': 'true',
     'margin-w': '15',
-    'margin-h': '15',
-    'column': '7',
-    'row': '2'
+    'column': '7'
   })
   return `https://github-profile-trophy.vercel.app/?${params.toString()}`
+}
+
+// Alternative Trophy Service
+export function generateAlternativeTrophyUrl(username: string, theme: string = 'dark'): string {
+  const url = `https://github-trophies.vercel.app/?username=${username}&theme=${theme}&no-frame=true&margin-w=15`
+  return escapeUrlForXml(url)
+}
+
+// Trophy Backup Service
+export function generateTrophyBackupUrl(username: string, theme: string = 'dark'): string {
+  const url = `https://github-profile-trophy-git-master-ryo-ma.vercel.app/?username=${username}&theme=${theme}&no-frame=true&margin-w=15`
+  return escapeUrlForXml(url)
 }
 
 export function generateActivityGraphImageUrl(username: string, theme: string = 'tokyo-night'): string {
@@ -479,7 +558,8 @@ export function generateContributionCalendarUrl(username: string, theme: string 
     'highcontrast': 'highcontrast',
     'ocean': 'ocean_dark'
   }
-  return `https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=${themeMap[theme] || 'dark'}&area=true&hide_border=true&custom_title=Contribution Calendar`
+  const url = `https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=${themeMap[theme] || 'dark'}&area=true&hide_border=true&custom_title=Contribution Calendar`
+  return escapeUrlForXml(url)
 }
 
 // Enhanced: Generate snake contribution graph with multiple reliable services
@@ -724,17 +804,20 @@ export function generateTechStackUrl(languages: string[], theme: string = 'dark'
   const iconString = uniqueIcons.slice(0, 16).join(',') // Limit to 16 icons max
   
   const themeParam = theme === 'light' ? 'light' : 'dark'
-  return `https://skillicons.dev/icons?i=${iconString}&theme=${themeParam}&perline=8`
+  const url = `https://skillicons.dev/icons?i=${iconString}&theme=${themeParam}&perline=8`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate coding time stats
 export function generateCodingTimeUrl(username: string): string {
-  return `https://github-readme-stats.vercel.app/api/wakatime?username=${username}&layout=compact&theme=dark&hide_border=true&bg_color=00000000`
+  const url = `https://github-readme-stats.vercel.app/api/wakatime?username=${username}&layout=compact&theme=dark&hide_border=true&bg_color=00000000`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate Spotify widget with enhanced styling
 export function generateSpotifyWidget(username: string = 'YOUR_SPOTIFY_USERNAME'): string {
-  return `https://spotify-github-profile.vercel.app/api/spotify?background_color=0d1117&border_color=ffffff&scan=true&theme=default&rainbow=false`
+  const url = `https://spotify-github-profile.vercel.app/api/spotify?background_color=0d1117&border_color=ffffff&scan=true&theme=default&rainbow=false`
+  return escapeUrlForXml(url)
 }
 
 export function generateSpotifyUrl(): string {
@@ -745,12 +828,14 @@ export function generateSpotifyUrl(): string {
 export function generateWeatherUrl(location: string): string {
   if (!location) return ''
   const encodedLocation = encodeURIComponent(location)
-  return `https://wttr.in/${encodedLocation}.png?0&theme=dark&format=3`
+  const url = `https://wttr.in/${encodedLocation}.png?0&theme=dark&format=3`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate profile views URL with enhanced styling
 export function generateProfileViewsUrl(username: string): string {
-  return `https://komarev.com/ghpvc/?username=${username}&label=Profile%20views&color=0e75b6&style=flat-square&labelColor=1c1917`
+  const url = `https://komarev.com/ghpvc/?username=${username}&label=Profile%20views&color=0e75b6&style=flat-square&labelColor=1c1917`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Generate custom shields/badges with enhanced emoji support
@@ -806,7 +891,8 @@ export function generateGitHubMetricsUrl(username: string, theme: string = 'dark
   const selectedTheme = themeMap[theme] || 'dark'
   
   // Enhanced GitHub stats with comprehensive metrics
-  return `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&count_private=true&theme=${selectedTheme}&include_all_commits=true&line_height=21&hide_border=true&title_color=58A6FF&icon_color=1F6FEB&text_color=C9D1D9&bg_color=0D1117`
+  const url = `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&count_private=true&theme=${selectedTheme}&include_all_commits=true&line_height=21&hide_border=true&title_color=58A6FF&icon_color=1F6FEB&text_color=C9D1D9&bg_color=0D1117`
+  return escapeUrlForXml(url)
 }
 
 // Advanced: Fetch recent commits across all repositories with enhanced error handling

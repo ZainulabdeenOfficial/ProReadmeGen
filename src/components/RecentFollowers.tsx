@@ -18,6 +18,25 @@ interface RecentFollowersProps {
   user: GitHubUser
 }
 
+// Utility function to escape URLs for XML/HTML context
+const escapeUrlForXml = (url: string): string => {
+  return url.replace(/&/g, '&amp;')
+}
+
+// Helper function to get follower count
+async function getFollowerCount(username: string): Promise<string> {
+  try {
+    const response = await fetch(`https://api.github.com/users/${username}`)
+    if (response.ok) {
+      const userData = await response.json()
+      return userData.followers.toLocaleString()
+    }
+  } catch (error) {
+    console.error('Error fetching follower count:', error)
+  }
+  return 'many amazing'
+}
+
 export default function RecentFollowers({ username, user }: RecentFollowersProps) {
   const [followers, setFollowers] = useState<Follower[]>([])
   const [loading, setLoading] = useState(false)
@@ -67,8 +86,8 @@ export default function RecentFollowers({ username, user }: RecentFollowersProps
     section += `</tr>\n</table>\n\n`
     
     section += `### 💝 Join our amazing community!\n\n`
-    section += `[![Follow](https://img.shields.io/github/followers/${username}?label=Follow&style=social)](https://github.com/${username})\n`
-    section += `[![Star](https://img.shields.io/github/stars/${username}?style=social)](https://github.com/${username}?tab=repositories)\n\n`
+    section += `[![Follow](${escapeUrlForXml(`https://img.shields.io/github/followers/${username}?label=Follow&style=social`)})](https://github.com/${username})\n`
+    section += `[![Star](${escapeUrlForXml(`https://img.shields.io/github/stars/${username}?style=social`)})](https://github.com/${username}?tab=repositories)\n\n`
     
     section += `</div>\n\n`
     
@@ -221,13 +240,13 @@ export const getFollowersReadmeSection = async (username: string): Promise<strin
       section += `### 💝 Join our growing community of ${await getFollowerCount(username)} developers!\n\n`
       section += `<p align="center">\n`
       section += `<a href="https://github.com/${username}?tab=followers" target="_blank">\n`
-      section += `<img src="https://img.shields.io/github/followers/${username}?label=Follow%20@${username}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue" alt="Follow ${username}"/>\n`
+      section += `<img src="${escapeUrlForXml(`https://img.shields.io/github/followers/${username}?label=Follow%20@${username}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`)}" alt="Follow ${username}"/>\n`
       section += `</a>\n`
       section += `</p>\n\n`
       
       // Add fun engagement section
       section += `<p align="center">\n`
-      section += `<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=600&lines=👋+New+friends+are+always+welcome!;🚀+Let's+build+something+amazing+together!;💻+Open+to+collaboration+and+new+ideas!" alt="Typing SVG" />\n`
+      section += `<img src="${escapeUrlForXml('https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=600&lines=👋+New+friends+are+always+welcome!;🚀+Let\'s+build+something+amazing+together!;💻+Open+to+collaboration+and+new+ideas!')}" alt="Typing SVG" />\n`
       section += `</p>\n\n`
       
       section += `</div>\n\n`
@@ -240,17 +259,3 @@ export const getFollowersReadmeSection = async (username: string): Promise<strin
   
   return ''
 }
-
-// Helper function to get follower count
-async function getFollowerCount(username: string): Promise<string> {
-  try {
-    const response = await fetch(`https://api.github.com/users/${username}`)
-    if (response.ok) {
-      const userData = await response.json()
-      return userData.followers.toLocaleString()
-    }
-  } catch (error) {
-    console.error('Error fetching follower count:', error)
-  }
-  return 'many amazing'
-} 
