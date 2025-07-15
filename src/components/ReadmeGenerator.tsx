@@ -41,22 +41,51 @@ import {
   generateAdvancedMetricsUrl,
   generateComprehensiveStatsUrl,
   generateCodingTimeWidget,
+  generateWorkingCodingTimeWidget,
   generateSnakeContributionUrl,
   generateAlternativeSnakeUrl,
   generateSnakeAnimationBackup,
-  detectFrameworksAndTools
+  detectFrameworksAndTools,
+  checkServiceHealth,
+  ServiceHealthCheck,
+  getWorkingGifUrls,
+  generateCustomStreakScoreCard,
+  generateFixedProfileViewsUrl,
+  generateFixedTypingImageUrl,
+  generateFixedProfileBannerUrl
 } from '@/lib/github'
-
-// Utility function to escape URLs for XML/HTML context
-function escapeUrlForXml(url: string): string {
-  return url.replace(/&/g, '&amp;')
-}
 import { generateDynamicEmojis, generateRandomQuote, generateJoke } from '@/lib/emojiGenerator'
 import { getRandomQuote } from '@/lib/quotes'
 import { getFollowersReadmeSection } from './RecentFollowers'
 import AdvancedStats from './AdvancedStats'
 import TechStack from './TechStack'
 import SocialWidgets from './SocialWidgets'
+
+// Utility function to escape URLs for XML/HTML context
+function escapeUrlForXml(url: string): string {
+  return url.replace(/&/g, '&amp;')
+}
+
+// Utility function to properly encode badge URLs for shields.io
+function createSafeShieldsBadgeUrl(label: string, color: string, logo: string): string {
+  // Replace spaces and special characters for shields.io compatibility
+  const safeLabel = label.replace(/\s+/g, '%20')
+  const safeColor = color.replace('#', '')
+  const safeLogo = logo.replace(/\s+/g, '%20')
+  
+  return `https://img.shields.io/badge/${safeLabel}-${safeColor}?style=for-the-badge&logo=${safeLogo}&logoColor=white`
+}
+
+// Utility function to create safe GitHub badges with proper encoding
+function createSafeGitHubBadge(username: string, label: string, type: string): string {
+  const safeUsername = encodeURIComponent(username)
+  const safeLabel = encodeURIComponent(label)
+  
+  if (type === 'followers') {
+    return `https://img.shields.io/github/followers/${safeUsername}?label=${safeLabel}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`
+  }
+  return `https://img.shields.io/github/${type}/${safeUsername}?label=${safeLabel}&style=social`
+}
 
 interface ReadmeGeneratorProps {
   user: GitHubUser
@@ -206,10 +235,10 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       showPlaylists: true
     },
     gifConfig: {
-      headerGif: 'https://media.giphy.com/media/L1R1tvI9svkIWwpVYr/giphy.gif',
-      codingGif: 'https://media.giphy.com/media/SWoSkN6DxTszqIKEqv/giphy.gif',
-      skillsGif: 'https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif',
-      footerGif: 'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif',
+      headerGif: getWorkingGifUrls()[0], // Waving hand
+      codingGif: getWorkingGifUrls()[1], // Coding
+      skillsGif: getWorkingGifUrls()[3], // Developer
+      footerGif: getWorkingGifUrls()[5], // Footer animation
       customGifs: []
     }
   })
@@ -221,6 +250,9 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       const topRepos = getTopRepositories(repositories)
       const languageStats = await calculateLanguageStats(repositories)
       const topLanguages = Object.keys(languageStats).slice(0, 8)
+      
+      // Check service health to only include working features
+      const serviceHealth = await checkServiceHealth(user.login, config.theme)
       
       // Fetch advanced data including real frameworks and tools
       const [emojiProfile, followersSection, recentCommits, advancedStats, realTechStack] = await Promise.all([
@@ -240,7 +272,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
         followersSection,
         recentCommits,
         advancedStats,
-        realTechStack
+        realTechStack,
+        serviceHealth
       )
       
       onReadmeGenerated(readmeContent)
@@ -262,7 +295,16 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     followersSection: string = '',
     recentCommits: any[] = [],
     advancedStats: any = null,
-    realTechStack: any = null
+    realTechStack: any = null,
+    serviceHealth: ServiceHealthCheck = {
+      gitHubStats: true,
+      streakStats: true,
+      activityGraph: true,
+      typingAnimation: true,
+      snakeAnimation: false,
+      wakatimeStats: false,
+      trophies: true
+    }
   ) => {
     const badges = generateCustomBadges(user)
     const quote = generateRandomQuote()
@@ -273,9 +315,9 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     // Amazing Header with Multiple Banners
     content += `<div align="center">\n\n`
     
-    // Primary Profile Banner with Custom Colors
+    // Primary Profile Banner with Fixed Encoding
     if (config.includeProfileBanner) {
-      const bannerUrl = escapeUrlForXml(`https://capsule-render.vercel.app/api?type=waving&color=${config.sectionColors.banner.replace('#', '')}&height=200&section=header&text=${encodeURIComponent(user.name || user.login)}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=${encodeURIComponent(user.bio || 'Developer & Creator')}&descAlignY=60&descAlign=50`)
+      const bannerUrl = generateFixedProfileBannerUrl(user.login, user.name || user.login, user.bio || 'Developer & Creator', config.theme)
       content += `![GitHub Banner](${bannerUrl})\n\n`
     }
     
@@ -287,7 +329,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     
     // Fire Animation Header
     if (config.includeFireAnimation) {
-      content += `![Fire Animation](${escapeUrlForXml('https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=F75C7E&center=true&vCenter=true&width=600&lines=🔥+AMAZING+DEVELOPER+🔥;💻+CODING+WIZARD+💻;🚀+OPEN+SOURCE+HERO+🚀;✨+INNOVATION+ENTHUSIAST+✨')})\n\n`
+      const fireUrl = `https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=F75C7E&center=true&vCenter=true&width=600&lines=${encodeURIComponent('🔥 AMAZING DEVELOPER 🔥;💻 CODING WIZARD 💻;🚀 OPEN SOURCE HERO 🚀;✨ INNOVATION ENTHUSIAST ✨')}`
+      content += `![Fire Animation](${escapeUrlForXml(fireUrl)})\n\n`
     }
     
     content += `</div>\n\n`
@@ -295,22 +338,22 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     // Enhanced Main Title with Emojis
     content += `# ${emojiProfile.greeting} ${emojiProfile.personalityEmojis.join(' ')}\n\n`
     
-    // Typing Animation with Multiple Dynamic Lines and Fallbacks
-    if (config.includeTypingAnimation) {
+    // Typing Animation (fixed encoding)
+    if (config.includeTypingAnimation && serviceHealth.typingAnimation) {
       const typingTexts = [
         `${emojiProfile.codingStatus}`,
-        `🚀+Full+Stack+Developer`,
-        `${emojiProfile.locationEmoji}+${user.location?.replace(/\s+/g, '+') || 'Earth'}`,
-        `💡+Innovation+Enthusiast`,
-        `🌟+Open+Source+Contributor`,
-        `⚡+Problem+Solver`,
-        `🎯+Tech+Explorer`,
-        `🛠️+Code+Craftsman`
+        `🚀 Full Stack Developer`,
+        `${emojiProfile.locationEmoji} ${user.location || 'Earth'}`,
+        `💡 Innovation Enthusiast`,
+        `🌟 Open Source Contributor`,
+        `⚡ Problem Solver`,
+        `🎯 Tech Explorer`,
+        `🛠️ Code Craftsman`
       ]
       content += `<div align="center">\n\n`
       
-      // Primary typing service
-      content += `![Typing SVG](${generateEnhancedTypingImageUrl(typingTexts, config.theme)})\n\n`
+      // Primary typing service with fixed encoding
+      content += `![Typing SVG](${generateFixedTypingImageUrl(typingTexts, config.theme)})\n\n`
       
       // Alternative typing services as fallbacks
       content += `<!-- Alternative Typing Services for better reliability -->\n`
@@ -362,15 +405,16 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       socialPlatforms.forEach(platform => {
         const link = config.socialLinks[platform.key as keyof SocialLinks]
         if (link.trim()) {
-          content += `[![${platform.name}](https://img.shields.io/badge/${platform.name}-${platform.color}?style=for-the-badge&logo=${platform.icon}&logoColor=white)](${link}) `
+          const safeBadgeUrl = createSafeShieldsBadgeUrl(platform.name, platform.color, platform.icon)
+          content += `[![${platform.name}](${escapeUrlForXml(safeBadgeUrl)})](${link}) `
         }
       })
       
       content += `\n\n</div>\n\n`
     }
 
-    // 3D Contribution Graph with Enhanced Styling and Fallbacks
-    if (config.include3DContributions) {
+    // 3D Contribution Graph with Enhanced Styling (only if service is working)
+    if (config.include3DContributions && serviceHealth.activityGraph) {
       content += `## 🌟 3D Contribution Graph\n\n`
       content += `<div align="center">\n\n`
       
@@ -384,11 +428,18 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `</div>\n\n`
     }
 
-    // Coding Time Widget
+    // Development Activity Widget (only if user has data or use alternative)
     if (config.includeCodingTime) {
-      content += `## ⏰ Weekly Development Breakdown\n\n`
+      content += `## ⏰ Development Activity\n\n`
       content += `<div align="center">\n\n`
-      content += `![Coding Time](${generateCodingTimeWidget(user.login, config.theme)})\n\n`
+      
+      if (serviceHealth.wakatimeStats) {
+        content += `![Coding Time](${generateCodingTimeWidget(user.login, config.theme)})\n\n`
+      } else {
+        // Use alternative development activity chart
+        content += `![Development Activity](${generateWorkingCodingTimeWidget(user.login, config.theme)})\n\n`
+      }
+      
       content += `</div>\n\n`
     }
 
@@ -407,10 +458,10 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += '\n\n</div>\n\n'
     }
     
-    // Profile Views
+    // Profile Views (fixed)
     if (config.includeVisitorCount) {
       content += `<div align="center">\n\n`
-      content += `![Profile Views](${generateProfileViewsUrl(user.login)})\n\n`
+      content += `![Profile Views](${generateFixedProfileViewsUrl(user.login)})\n\n`
       content += `</div>\n\n`
     }
     
@@ -487,8 +538,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `\n</div>\n\n`
     }
 
-    // Enhanced GitHub Stats with Custom Colors and Multiple Fallbacks
-    if (config.includeStats) {
+    // Enhanced GitHub Stats (only if service is working)
+    if (config.includeStats && serviceHealth.gitHubStats) {
       content += `## ${emojiProfile.statsEmoji} GitHub Statistics\n\n`
       content += `<div align="center">\n\n`
       
@@ -511,21 +562,20 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `</div>\n\n`
     }
 
-    // Enhanced GitHub Streaks with Custom Colors and Multiple Fallbacks
+    // Enhanced GitHub Streaks with Custom Score Card
     if (config.includeStreaks) {
       content += `## ${emojiProfile.streakEmoji} GitHub Streaks & Achievements\n\n`
       content += `<div align="center">\n\n`
       
-      // Primary streak service with custom colors
-      const streakColor = config.sectionColors.streak.replace('#', '')
-      const customStreakUrl = escapeUrlForXml(`https://github-readme-streak-stats.herokuapp.com/?user=${user.login}&theme=${config.theme}&fire=${streakColor}&ring=${streakColor}&currStreakLabel=${streakColor}&sideNums=${streakColor}&sideLabels=${streakColor}&dates=${streakColor}&background=00000000&border=FFFFFF00&stroke=FFFFFF00`)
+      // Primary custom streak score card with avatar
+      content += `![GitHub Streak](${generateCustomStreakScoreCard(user.login, config.theme)})\n\n`
       
-      content += `<img src="${customStreakUrl}" alt="GitHub Streak" />\n\n`
-      
-      // Alternative streak services (Fallbacks)
-      content += `<!-- Alternative Streak Services for better reliability -->\n`
-      content += `<img src="${generateAlternativeStreakStatsUrl(user.login, config.theme)}" alt="Alternative Streak Stats" />\n\n`
-      content += `<img src="${generateStreakStatsBackup(user.login, config.theme)}" alt="Backup Streak Stats" />\n\n`
+      // Alternative streak services (Fallbacks) only if custom fails
+      if (serviceHealth.streakStats) {
+        content += `<!-- Alternative Streak Services for better reliability -->\n`
+        content += `<img src="${generateAlternativeStreakStatsUrl(user.login, config.theme)}" alt="Alternative Streak Stats" />\n\n`
+        content += `<img src="${generateStreakStatsBackup(user.login, config.theme)}" alt="Backup Streak Stats" />\n\n`
+      }
       
       content += `</div>\n\n`
     }
@@ -565,28 +615,34 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `</div>\n\n`
     }
 
-    // Enhanced Snake Animation with multiple reliable sources and theme support
+    // Enhanced Snake Animation (only if user has it setup)
     if (config.includeSnakeAnimation) {
-      content += `## 🐍 Snake eating my contributions\n\n`
-      content += `<div align="center">\n\n`
-      content += `<picture>\n`
-      content += `  <source media="(prefers-color-scheme: dark)" srcset="${generateSnakeContributionUrl(user.login, 'dark')}">\n`
-      content += `  <source media="(prefers-color-scheme: light)" srcset="${generateSnakeContributionUrl(user.login, 'light')}">\n`
-      content += `  <img alt="Snake animation" src="${generateSnakeContributionUrl(user.login, config.theme)}">\n`
-      content += `</picture>\n\n`
-      content += `<!-- Alternative Snake Animations for better reliability -->\n`
-      content += `![Snake Animation](${generateAlternativeSnakeUrl(user.login, config.theme)})\n\n`
-      content += `![Personal Snake](${generateSnakeAnimationBackup(user.login, config.theme)})\n\n`
-      content += `</div>\n\n`
-      
-      // Add instructions for setting up snake animation
-      content += `<details>\n`
-      content += `<summary>🔧 How to add Snake Animation to your profile</summary>\n\n`
-      content += `1. Create a repository with the same name as your username\n`
-      content += `2. Add the GitHub Action from: https://github.com/Platane/snk\n`
-      content += `3. The snake animation will be generated automatically with your chosen theme!\n`
-      content += `4. Multiple fallback sources ensure maximum compatibility\n\n`
-      content += `</details>\n\n`
+      if (serviceHealth.snakeAnimation) {
+        // User has snake animation setup
+        content += `## 🐍 Snake eating my contributions\n\n`
+        content += `<div align="center">\n\n`
+        content += `<picture>\n`
+        content += `  <source media="(prefers-color-scheme: dark)" srcset="${generateSnakeContributionUrl(user.login, 'dark')}">\n`
+        content += `  <source media="(prefers-color-scheme: light)" srcset="${generateSnakeContributionUrl(user.login, 'light')}">\n`
+        content += `  <img alt="Snake animation" src="${generateSnakeContributionUrl(user.login, config.theme)}">\n`
+        content += `</picture>\n\n`
+        content += `</div>\n\n`
+      } else {
+        // Use demo snake animation with setup instructions
+        content += `## 🐍 Snake eating contributions\n\n`
+        content += `<div align="center">\n\n`
+        content += `![Snake Animation](${generateSnakeAnimationBackup(user.login, config.theme)})\n\n`
+        content += `</div>\n\n`
+        
+        // Add instructions for setting up snake animation
+        content += `<details>\n`
+        content += `<summary>🔧 How to add YOUR Snake Animation</summary>\n\n`
+        content += `1. Create a repository with the same name as your username (${user.login})\n`
+        content += `2. Add the GitHub Action from: https://github.com/Platane/snk\n`
+        content += `3. The snake animation will be generated automatically with your contributions!\n`
+        content += `4. After setup, regenerate your README to see your personal snake!\n\n`
+        content += `</details>\n\n`
+      }
     }
 
     // Enhanced Spotify Integration
@@ -617,7 +673,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
         config.spotifyConfig.playlists.forEach((playlistUrl, index) => {
           if (playlistUrl.trim()) {
             const playlistId = playlistUrl.split('/').pop()?.split('?')[0]
-            content += `[![Playlist ${index + 1}](${escapeUrlForXml(`https://img.shields.io/badge/🎵%20Playlist%20${index + 1}-1DB954?style=for-the-badge&logo=spotify&logoColor=white`)})](${playlistUrl})\n`
+            const safePlaylistBadgeUrl = createSafeShieldsBadgeUrl(`🎵 Playlist ${index + 1}`, '1DB954', 'spotify')
+            content += `[![Playlist ${index + 1}](${escapeUrlForXml(safePlaylistBadgeUrl)})](${playlistUrl})\n`
           }
         })
         content += `\n</div>\n\n`
@@ -670,8 +727,8 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       }
     }
 
-    // Trophies with Enhanced Display
-    if (config.includeTrophies) {
+    // Trophies (only if service is working)
+    if (config.includeTrophies && serviceHealth.trophies) {
       content += `## ${emojiProfile.trophyEmoji} GitHub Achievements\n\n`
       content += `<div align="center">\n\n`
       
@@ -707,27 +764,10 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
       content += `</div>\n\n`
     }
 
-    // Recent Profile Visitors Section - Shows First 5 Recent Followers with Profile Pictures
+    // Recent Profile Visitors Section - Enhanced with Robust Fallbacks
     if (config.includeRecentVisitors) {
-      if (followersSection) {
-        content += followersSection
-      } else {
-        // Fallback section if no followers data available
-        content += `## 👥 Recent Profile Visitors\n\n`
-        content += `<div align="center">\n\n`
-        content += `### 🌟 Thanks for visiting my profile!\n\n`
-        content += `<p>\n`
-        content += `<a href="https://github.com/${user.login}?tab=followers" target="_blank">\n`
-        content += `<img src="${escapeUrlForXml(`https://img.shields.io/github/followers/${user.login}?label=Follow%20@${user.login}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`)}" alt="Follow ${user.login}"/>\n`
-        content += `</a>\n`
-        content += `</p>\n\n`
-        content += `<p>\n`
-        content += `<img src="${escapeUrlForXml('https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=👋+Welcome+to+my+GitHub+profile!;🚀+Check+out+my+latest+projects;💻+Always+learning+something+new;📫+Feel+free+to+reach+out!')}" alt="Typing SVG" />\n`
-        content += `<!-- Alternative Typing SVG for better reliability -->\n`
-        content += `<img src="${escapeUrlForXml('https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=👋+Welcome+to+my+GitHub+profile!;🚀+Check+out+my+latest+projects;💻+Always+learning+something+new;📫+Feel+free+to+reach+out!')}" alt="Alternative Typing SVG" />\n`
-        content += `</p>\n\n`
-        content += `</div>\n\n`
-      }
+      // Always include the followers section (it now has built-in fallbacks)
+      content += followersSection
     }
 
     // Fun Section with Enhanced Jokes and Quotes
@@ -749,13 +789,17 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     
     // Enhanced connection section
     if (user.blog) {
-      content += `[![Website](${escapeUrlForXml(`https://img.shields.io/badge/🌐%20Website-FF5722?style=for-the-badge&logo=google-chrome&logoColor=white`)})](${user.blog}) `
+      const safeWebsiteBadgeUrl = createSafeShieldsBadgeUrl('🌐 Website', 'FF5722', 'google-chrome')
+      content += `[![Website](${escapeUrlForXml(safeWebsiteBadgeUrl)})](${user.blog}) `
     }
     if (user.twitter_username) {
-      content += `[![Twitter](${escapeUrlForXml(`https://img.shields.io/badge/🐦%20Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white`)})](https://twitter.com/${user.twitter_username}) `
+      const safeTwitterBadgeUrl = createSafeShieldsBadgeUrl('🐦 Twitter', '1DA1F2', 'twitter')
+      content += `[![Twitter](${escapeUrlForXml(safeTwitterBadgeUrl)})](https://twitter.com/${user.twitter_username}) `
     }
-    content += `[![LinkedIn](${escapeUrlForXml(`https://img.shields.io/badge/💼%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white`)})](https://linkedin.com/in/${user.login}) `
-    content += `[![GitHub](${escapeUrlForXml(`https://img.shields.io/badge/🐙%20GitHub-100000?style=for-the-badge&logo=github&logoColor=white`)})](https://github.com/${user.login})\n\n`
+    const safeLinkedInBadgeUrl = createSafeShieldsBadgeUrl('💼 LinkedIn', '0077B5', 'linkedin')
+    const safeGitHubBadgeUrl = createSafeShieldsBadgeUrl('🐙 GitHub', '100000', 'github')
+    content += `[![LinkedIn](${escapeUrlForXml(safeLinkedInBadgeUrl)})](https://linkedin.com/in/${user.login}) `
+    content += `[![GitHub](${escapeUrlForXml(safeGitHubBadgeUrl)})](https://github.com/${user.login})\n\n`
 
     // Footer with animated banner
     content += `![Footer Wave](${escapeUrlForXml('https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer&text=Thanks%20for%20visiting!&fontSize=20&fontColor=fff&animation=fadeIn')})\n\n`
@@ -766,9 +810,11 @@ export default function ReadmeGenerator({ user, onReadmeGenerated }: ReadmeGener
     }
     
     // Footer statistics
-    content += `![Profile Views](${generateProfileViewsUrl(user.login)}) `
-    content += `![GitHub Followers](${escapeUrlForXml(`https://img.shields.io/github/followers/${user.login}?style=social&label=Follow`)}) `
-    content += `![GitHub Stars](${escapeUrlForXml(`https://img.shields.io/github/stars/${user.login}?style=social&label=Stars`)})\n\n`
+    content += `![Profile Views](${generateFixedProfileViewsUrl(user.login)}) `
+    const safeFooterFollowersUrl = `https://img.shields.io/github/followers/${encodeURIComponent(user.login)}?style=social&label=Follow`
+    const safeFooterStarsUrl = `https://img.shields.io/github/stars/${encodeURIComponent(user.login)}?style=social&label=Stars`
+    content += `![GitHub Followers](${escapeUrlForXml(safeFooterFollowersUrl)}) `
+    content += `![GitHub Stars](${escapeUrlForXml(safeFooterStarsUrl)})\n\n`
     
     // Inspirational footer message
     content += `### ✨ "Code is poetry written in logic" ✨\n\n`

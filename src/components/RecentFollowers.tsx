@@ -86,8 +86,10 @@ export default function RecentFollowers({ username, user }: RecentFollowersProps
     section += `</tr>\n</table>\n\n`
     
     section += `### 💝 Join our amazing community!\n\n`
-    section += `[![Follow](${escapeUrlForXml(`https://img.shields.io/github/followers/${username}?label=Follow&style=social`)})](https://github.com/${username})\n`
-    section += `[![Star](${escapeUrlForXml(`https://img.shields.io/github/stars/${username}?style=social`)})](https://github.com/${username}?tab=repositories)\n\n`
+    const safeFollowUrl = `https://img.shields.io/github/followers/${encodeURIComponent(username)}?label=Follow&style=social`
+    const safeStarUrl = `https://img.shields.io/github/stars/${encodeURIComponent(username)}?style=social`
+    section += `[![Follow](${escapeUrlForXml(safeFollowUrl)})](https://github.com/${username})\n`
+    section += `[![Star](${escapeUrlForXml(safeStarUrl)})](https://github.com/${username}?tab=repositories)\n\n`
     
     section += `</div>\n\n`
     
@@ -210,52 +212,120 @@ export default function RecentFollowers({ username, user }: RecentFollowersProps
   )
 }
 
-// Export the README section generator for use in other components - ENHANCED VERSION
+// Export the README section generator for use in other components - ENHANCED VERSION with Fallbacks
 export const getFollowersReadmeSection = async (username: string): Promise<string> => {
+  let section = `## 👥 Recent Profile Visitors\n\n`
+  section += `<div align="center">\n\n`
+  
   try {
-    const response = await fetch(`https://api.github.com/users/${username}/followers?per_page=5&sort=created`)
+    console.log(`Fetching followers for: ${username}`)
+    const response = await fetch(`https://api.github.com/users/${username}/followers?per_page=8&sort=created`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'GitHub-README-Generator'
+      }
+    })
+    
+    console.log(`Response status: ${response.status}`)
+    
     if (response.ok) {
       const followers: Follower[] = await response.json()
+      console.log(`Found ${followers.length} followers`)
       
-      if (followers.length === 0) return ''
-
-      let section = `## 👥 Recent Profile Visitors\n\n`
-      section += `<div align="center">\n\n`
-      section += `### 🌟 Thanks for visiting! Meet some amazing developers who recently followed me:\n\n`
-      
-      // Display followers in a beautiful responsive table
-      section += `<table>\n<tr>\n`
-      followers.forEach((follower, index) => {
-        section += `<td align="center" width="20%">\n`
-        section += `<a href="${follower.html_url}" target="_blank">\n`
-        section += `<img src="${follower.avatar_url}?s=100" width="100px" height="100px" style="border-radius: 50%; border: 4px solid #58a6ff; box-shadow: 0 4px 8px rgba(88, 166, 255, 0.3);" alt="${follower.login}" title="Visit ${follower.login}'s profile" />\n`
-        section += `<br/>\n`
-        section += `<sub><b style="font-size: 14px; color: #58a6ff;">${follower.login}</b></sub>\n`
-        section += `</a>\n`
-        section += `</td>\n`
-      })
-      section += `</tr>\n</table>\n\n`
-      
-      // Add interactive elements
-      section += `### 💝 Join our growing community of ${await getFollowerCount(username)} developers!\n\n`
+      if (followers.length > 0) {
+        section += `### 🌟 Thanks for visiting! Meet some amazing developers who recently followed me:\n\n`
+        
+        // Display followers in a responsive grid (2 rows, up to 4 per row)
+        section += `<table>\n`
+        
+        // First row (up to 4 followers)
+        section += `<tr>\n`
+        followers.slice(0, 4).forEach((follower, index) => {
+          section += `<td align="center" width="25%">\n`
+          section += `<a href="${follower.html_url}" target="_blank">\n`
+          section += `<img src="${follower.avatar_url}?s=80" width="80px" height="80px" style="border-radius: 50%; border: 3px solid #58a6ff; box-shadow: 0 4px 8px rgba(88, 166, 255, 0.3);" alt="${follower.login}" title="Visit ${follower.login}'s profile" />\n`
+          section += `<br/>\n`
+          section += `<sub><b style="font-size: 12px; color: #58a6ff;">${follower.login}</b></sub>\n`
+          section += `</a>\n`
+          section += `</td>\n`
+        })
+        section += `</tr>\n`
+        
+        // Second row if there are more than 4 followers
+        if (followers.length > 4) {
+          section += `<tr>\n`
+          followers.slice(4, 8).forEach((follower, index) => {
+            section += `<td align="center" width="25%">\n`
+            section += `<a href="${follower.html_url}" target="_blank">\n`
+            section += `<img src="${follower.avatar_url}?s=80" width="80px" height="80px" style="border-radius: 50%; border: 3px solid #58a6ff; box-shadow: 0 4px 8px rgba(88, 166, 255, 0.3);" alt="${follower.login}" title="Visit ${follower.login}'s profile" />\n`
+            section += `<br/>\n`
+            section += `<sub><b style="font-size: 12px; color: #58a6ff;">${follower.login}</b></sub>\n`
+            section += `</a>\n`
+            section += `</td>\n`
+          })
+          section += `</tr>\n`
+        }
+        
+        section += `</table>\n\n`
+        
+        // Add interactive elements
+        try {
+          const followerCount = await getFollowerCount(username)
+          section += `### 💝 Join our growing community of ${followerCount} developers!\n\n`
+        } catch (error) {
+          section += `### 💝 Join our amazing developer community!\n\n`
+        }
+      } else {
+        // No followers yet - show encouraging message
+        section += `### 🌟 Building an amazing developer community!\n\n`
+        section += `<p align="center">\n`
+        section += `<img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="200" alt="Waving hand" />\n`
+        section += `</p>\n\n`
+        section += `### 🚀 Be the first to follow and join the journey!\n\n`
+      }
+    } else {
+      // API failed - show generic encouraging message
+      console.log(`API call failed with status: ${response.status}`)
+      section += `### 🌟 Thanks for visiting my GitHub profile!\n\n`
       section += `<p align="center">\n`
-      section += `<a href="https://github.com/${username}?tab=followers" target="_blank">\n`
-      section += `<img src="${escapeUrlForXml(`https://img.shields.io/github/followers/${username}?label=Follow%20@${username}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`)}" alt="Follow ${username}"/>\n`
-      section += `</a>\n`
+      section += `<img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="200" alt="Welcome" />\n`
       section += `</p>\n\n`
-      
-      // Add fun engagement section
-      section += `<p align="center">\n`
-      section += `<img src="${escapeUrlForXml('https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=600&lines=👋+New+friends+are+always+welcome!;🚀+Let\'s+build+something+amazing+together!;💻+Open+to+collaboration+and+new+ideas!')}" alt="Typing SVG" />\n`
-      section += `</p>\n\n`
-      
-      section += `</div>\n\n`
-      
-      return section
+      section += `### 🚀 Let's connect and build something amazing together!\n\n`
     }
+    
+    // Always add follow button and engagement section
+    section += `<p align="center">\n`
+    section += `<a href="https://github.com/${username}?tab=followers" target="_blank">\n`
+    const safeFollowersBadgeUrl = `https://img.shields.io/github/followers/${encodeURIComponent(username)}?label=${encodeURIComponent(`Follow @${username}`)}&style=for-the-badge&logo=github&logoColor=white&labelColor=black&color=blue`
+    section += `<img src="${escapeUrlForXml(safeFollowersBadgeUrl)}" alt="Follow ${username}"/>\n`
+    section += `</a>\n`
+    section += `</p>\n\n`
+    
+    // Add fun engagement section with typing animation
+    section += `<p align="center">\n`
+    const engagementTexts = ['👋 New friends are always welcome!', '🚀 Let\'s build something amazing together!', '💻 Open to collaboration and new ideas!', '🌟 Thanks for visiting my profile!']
+    const engagementUrl = `https://readme-typing-svg.demolab.com?font=Fira+Code&size=16&duration=2000&pause=1000&color=58A6FF&background=00000000&center=true&vCenter=true&random=false&width=500&lines=${encodeURIComponent(engagementTexts.join(';'))}`
+    section += `<img src="${escapeUrlForXml(engagementUrl)}" alt="Typing SVG" />\n`
+    section += `</p>\n\n`
+    
   } catch (error) {
     console.error('Error generating followers section:', error)
+    
+    // Fallback section when everything fails
+    section += `### 🌟 Thanks for visiting my profile!\n\n`
+    section += `<p align="center">\n`
+    section += `<img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="200" alt="Welcome" />\n`
+    section += `</p>\n\n`
+    section += `### 💻 Let's connect and build something awesome!\n\n`
+    
+    section += `<p align="center">\n`
+    section += `<a href="https://github.com/${username}" target="_blank">\n`
+    const fallbackBadgeUrl = `https://img.shields.io/badge/Follow-${encodeURIComponent(username)}-blue?style=for-the-badge&logo=github&logoColor=white`
+    section += `<img src="${escapeUrlForXml(fallbackBadgeUrl)}" alt="Follow ${username}"/>\n`
+    section += `</a>\n`
+    section += `</p>\n\n`
   }
   
-  return ''
+  section += `</div>\n\n`
+  return section
 }

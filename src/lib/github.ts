@@ -416,31 +416,31 @@ export function generateRepoCardUrl(username: string, repo: string, theme: strin
   return escapeUrlForXml(url)
 }
 
-// Advanced: Generate 3D contribution calendar with fallback options
+// Advanced: Generate 3D contribution calendar with working alternatives
 export function generate3DContributionUrl(username: string, theme: string = 'dark'): string {
   const themeColors: { [key: string]: string } = {
     'dark': 'dark',
     'light': 'light',
-    'tokyonight': 'blue',
-    'radical': 'pink',
-    'dracula': 'purple',
-    'gruvbox': 'yellow',
-    'cobalt': 'blue',
-    'synthwave': 'pink',
-    'highcontrast': 'black',
-    'ocean': 'blue',
-    'noctis': 'blue',
-    'gotham': 'dark',
-    'material': 'blue',
-    'nord': 'blue',
-    'onedark': 'dark'
+    'tokyonight': 'tokyonight',
+    'radical': 'radical',
+    'dracula': 'dracula',
+    'gruvbox': 'gruvbox',
+    'cobalt': 'cobalt',
+    'synthwave': 'synthwave',
+    'highcontrast': 'highcontrast',
+    'ocean': 'ocean_dark',
+    'noctis': 'noctis_minimus',
+    'gotham': 'gotham',
+    'material': 'material',
+    'nord': 'nord',
+    'onedark': 'onedark'
   }
   
   const calendarTheme = themeColors[theme] || 'dark'
-  const currentYear = new Date().getFullYear()
   
-  // Primary service - skyline contribution graph (more reliable)
-  return `https://skyline.github.com/${username}/${currentYear}.png`
+  // Use reliable activity graph as primary 3D visualization
+  const url = `https://github-readme-activity-graph.vercel.app/graph?username=${username}&bg_color=00000000&color=58a6ff&line=58a6ff&point=58a6ff&area=true&hide_border=true&theme=${calendarTheme}&custom_title=3D%20Contribution%20Graph`
+  return escapeUrlForXml(url)
 }
 
 // Alternative 3D contribution services
@@ -562,44 +562,24 @@ export function generateContributionCalendarUrl(username: string, theme: string 
   return escapeUrlForXml(url)
 }
 
-// Enhanced: Generate snake contribution graph with multiple reliable services
+// Enhanced: Generate snake contribution graph with working services
 export function generateSnakeContributionUrl(username: string, theme: string = 'dark'): string {
-  const themeColors: { [key: string]: string } = {
-    'dark': 'dark',
-    'light': 'github-light', 
-    'tokyonight': 'github-dark-blue',
-    'radical': 'radical',
-    'dracula': 'github-dark-green',
-    'gruvbox': 'github-dark-dimmed',
-    'cobalt': 'github-dark-blue',
-    'synthwave': 'radical',
-    'highcontrast': 'github-dark',
-    'ocean': 'ocean_dark'
-  }
-  
-  const snakeTheme = themeColors[theme] || 'dark'
-  
-  // Use the most reliable snake animation service
-  return `https://raw.githubusercontent.com/platane/platane/output/github-contribution-grid-snake-dark.svg`
+  // Try user's own snake first (if they have setup), fallback to demo
+  const userSnakeUrl = `https://raw.githubusercontent.com/${username}/${username}/output/github-contribution-grid-snake-dark.svg`
+  return userSnakeUrl
 }
 
-// Alternative snake animation with theme support
+// Alternative snake animation with reliable fallback
 export function generateAlternativeSnakeUrl(username: string, theme: string = 'dark'): string {
-  // Create query parameters for snake animation
-  const params = new URLSearchParams({
-    username: username,
-    background_color: theme === 'light' ? 'ffffff' : '0d1117',
-    color: theme === 'light' ? '216e39' : '9be9a8',
-    dot_color: theme === 'light' ? '1f6feb' : '58a6ff',
-    line_color: theme === 'light' ? '1f6feb' : '7c3aed'
-  })
-  
-  return `https://raw.githubusercontent.com/BEPb/BEPb/output/github-contribution-grid-snake.svg?${params.toString()}`
+  // Use light/dark theme specific snake from user's repo
+  const themeSpecific = theme === 'light' ? 'github-contribution-grid-snake.svg' : 'github-contribution-grid-snake-dark.svg'
+  return `https://raw.githubusercontent.com/${username}/${username}/output/${themeSpecific}`
 }
 
-// Backup snake animation URL for fallback
+// Backup snake animation URL - use demo snake as ultimate fallback
 export function generateSnakeAnimationBackup(username: string, theme: string = 'dark'): string {
-  return `https://raw.githubusercontent.com/${username}/${username}/output/github-contribution-grid-snake.svg`
+  // Use platane's demo snake as ultimate fallback
+  return `https://raw.githubusercontent.com/platane/platane/output/github-contribution-grid-snake-dark.svg`
 }
 
 // Enhanced: Generate proper tech stack with improved language mapping
@@ -1187,4 +1167,242 @@ export async function detectFrameworksAndTools(repositories: GitHubRepository[])
     databases: Array.from(databases).slice(0, 6), // Top 6 databases
     cloud: Array.from(cloud).slice(0, 6) // Top 6 cloud services
   }
+} 
+
+// URL Validation and Service Health Checking
+export async function validateImageUrl(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+    
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+    const contentType = response.headers.get('content-type')
+    return response.ok && !!(contentType?.startsWith('image/') || contentType?.includes('svg'))
+  } catch (error) {
+    console.warn(`URL validation failed for: ${url}`, error)
+    return false
+  }
+}
+
+// Check if user has snake animation setup
+export async function hasSnakeAnimation(username: string): Promise<boolean> {
+  const snakeUrl = `https://raw.githubusercontent.com/${username}/${username}/output/github-contribution-grid-snake-dark.svg`
+  return await validateImageUrl(snakeUrl)
+}
+
+// Check if user has Wakatime configured for coding time
+export async function hasWakatimeStats(username: string): Promise<boolean> {
+  const wakatimeUrl = `https://github-readme-stats.vercel.app/api/wakatime?username=${username}`
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    
+    const response = await fetch(wakatimeUrl, { 
+      method: 'HEAD', 
+      signal: controller.signal 
+    })
+    
+    clearTimeout(timeoutId)
+    return response.ok
+  } catch (error) {
+    return false
+  }
+}
+
+// Validate GitHub stats service
+export async function validateGitHubStatsService(username: string, theme: string = 'dark'): Promise<boolean> {
+  const statsUrl = generateGitHubStatsImageUrl(username, theme)
+  return await validateImageUrl(statsUrl.replace(/&amp;/g, '&'))
+}
+
+// Validate streak stats service
+export async function validateStreakStatsService(username: string, theme: string = 'dark'): Promise<boolean> {
+  const streakUrl = generateStreakStatsImageUrl(username, theme)
+  return await validateImageUrl(streakUrl.replace(/&amp;/g, '&'))
+}
+
+// Validate activity graph service
+export async function validateActivityGraphService(username: string, theme: string = 'dark'): Promise<boolean> {
+  const activityUrl = generateContributionCalendarUrl(username, theme)
+  return await validateImageUrl(activityUrl.replace(/&amp;/g, '&'))
+}
+
+// Validate typing animation service
+export async function validateTypingAnimationService(): Promise<boolean> {
+  const typingUrl = `https://readme-typing-svg.herokuapp.com/api?font=Fira+Code&size=22&duration=4000&pause=1000&color=58a6ff&width=600&lines=Test&center=true`
+  return await validateImageUrl(typingUrl)
+}
+
+// Comprehensive service health check
+export interface ServiceHealthCheck {
+  gitHubStats: boolean
+  streakStats: boolean
+  activityGraph: boolean
+  typingAnimation: boolean
+  snakeAnimation: boolean
+  wakatimeStats: boolean
+  trophies: boolean
+}
+
+export async function checkServiceHealth(username: string, theme: string = 'dark'): Promise<ServiceHealthCheck> {
+  const [
+    gitHubStats,
+    streakStats,
+    activityGraph,
+    typingAnimation,
+    snakeAnimation,
+    wakatimeStats
+  ] = await Promise.allSettled([
+    validateGitHubStatsService(username, theme),
+    validateStreakStatsService(username, theme),
+    validateActivityGraphService(username, theme),
+    validateTypingAnimationService(),
+    hasSnakeAnimation(username),
+    hasWakatimeStats(username)
+  ])
+
+  // Check trophies
+  const trophyUrl = generateTrophyImageUrl(username, theme)
+  const trophies = await validateImageUrl(trophyUrl.replace(/&amp;/g, '&'))
+
+  return {
+    gitHubStats: gitHubStats.status === 'fulfilled' ? gitHubStats.value : false,
+    streakStats: streakStats.status === 'fulfilled' ? streakStats.value : false,
+    activityGraph: activityGraph.status === 'fulfilled' ? activityGraph.value : false,
+    typingAnimation: typingAnimation.status === 'fulfilled' ? typingAnimation.value : false,
+    snakeAnimation: snakeAnimation.status === 'fulfilled' ? snakeAnimation.value : false,
+    wakatimeStats: wakatimeStats.status === 'fulfilled' ? wakatimeStats.value : false,
+    trophies
+  }
+}
+
+// Get working GIF URLs
+export function getWorkingGifUrls(): string[] {
+  return [
+    'https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif', // Waving hand
+    'https://media.giphy.com/media/L1R1tvI9svkIWwpVYr/giphy.gif', // Coding
+    'https://media.giphy.com/media/SWoSkN6DxTszqIKEqv/giphy.gif', // Matrix
+    'https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif', // Developer
+    'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif', // Typing fast
+    'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif', // Footer animation
+  ]
+}
+
+// Fixed coding time widget - only show if user has Wakatime
+export function generateWorkingCodingTimeWidget(username: string, theme: string = 'dark'): string {
+  // Use alternative that doesn't require Wakatime
+  const url = `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&count_private=true&theme=${theme}&include_all_commits=true&hide_border=true&bg_color=00000000&custom_title=📊%20Development%20Activity&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage`
+  return escapeUrlForXml(url)
+} 
+
+// Custom Streak Score Card with Avatar (Your preferred service)
+export function generateCustomStreakScoreCard(username: string, theme: string = 'dark'): string {
+  // Theme mapping for the custom streak service
+  const themeConfigs: { [key: string]: any } = {
+    'dark': {
+      backgroundColor: '#1a1b27',
+      textColor: '#ffffff',
+      accentColor: '#00d4aa',
+      borderColor: '#30363d',
+      waterColor: '#00d4aa',
+      streakColor: '#ff6b6b'
+    },
+    'light': {
+      backgroundColor: '#ffffff',
+      textColor: '#000000',
+      accentColor: '#0969da',
+      borderColor: '#d0d7de',
+      waterColor: '#0969da',
+      streakColor: '#d1242f'
+    },
+    'tokyonight': {
+      backgroundColor: '#1a1b27',
+      textColor: '#c0caf5',
+      accentColor: '#7aa2f7',
+      borderColor: '#414868',
+      waterColor: '#7aa2f7',
+      streakColor: '#f7768e'
+    },
+    'radical': {
+      backgroundColor: '#141321',
+      textColor: '#fe428e',
+      accentColor: '#a9fef7',
+      borderColor: '#30363d',
+      waterColor: '#a9fef7',
+      streakColor: '#fd1d53'
+    },
+    'dracula': {
+      backgroundColor: '#282a36',
+      textColor: '#f8f8f2',
+      accentColor: '#ff79c6',
+      borderColor: '#6272a4',
+      waterColor: '#ff79c6',
+      streakColor: '#ff5555'
+    }
+  }
+  
+  const config = themeConfigs[theme] || themeConfigs['dark']
+  
+  // Create the theme JSON and encode it properly
+  const themeJson = JSON.stringify(config)
+  const encodedTheme = encodeURIComponent(themeJson)
+  
+  const url = `https://v0-git-hub-streak-score-card-phi.vercel.app/api/card-with-avatar?username=${username}&theme=${encodedTheme}`
+  return escapeUrlForXml(url)
+}
+
+// Fixed Profile Views URL
+export function generateFixedProfileViewsUrl(username: string): string {
+  const url = `https://komarev.com/ghpvc/?username=${username}&label=Profile%20views&color=0e75b6&style=flat&labelColor=1c1917`
+  return escapeUrlForXml(url)
+}
+
+// Fixed Typing SVG URLs
+export function generateFixedTypingImageUrl(texts: string[], theme: string = 'dark'): string {
+  const themeColors: { [key: string]: string } = {
+    'dark': '58a6ff',
+    'light': '0969da',
+    'tokyonight': '7aa2f7',
+    'radical': 'fe428e',
+    'dracula': 'ff79c6',
+    'gruvbox': 'fabd2f',
+    'cobalt': '1f9ede',
+    'synthwave': 'ff6ac1',
+    'highcontrast': 'ffffff',
+    'ocean': '409eff'
+  }
+  
+  const color = themeColors[theme] || '58a6ff'
+  const encodedTexts = texts.map(text => encodeURIComponent(text)).join(';')
+  
+  const url = `https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=4000&pause=1000&color=${color}&width=600&lines=${encodedTexts}&center=true&vCenter=true&multiline=false&repeat=true`
+  return escapeUrlForXml(url)
+}
+
+// Fixed Profile Banner URL
+export function generateFixedProfileBannerUrl(username: string, name: string, bio: string, theme: string = 'dark'): string {
+  const themeColors: { [key: string]: string } = {
+    'dark': '0d1117',
+    'light': 'ffffff',
+    'tokyonight': '1a1b27',
+    'radical': '141321',
+    'dracula': '282a36',
+    'gruvbox': '1d2021',
+    'cobalt': '193549',
+    'synthwave': '2d1b69',
+    'highcontrast': '000000',
+    'ocean': '0e1419'
+  }
+  
+  const bgColor = themeColors[theme] || '0d1117'
+  const text = encodeURIComponent(name || username)
+  const desc = encodeURIComponent(bio || 'Developer & Creator')
+  
+  const url = `https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=${text}&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=${desc}&descAlignY=60&descAlign=50`
+  return escapeUrlForXml(url)
 } 
