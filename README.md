@@ -1,3 +1,9 @@
+# 🚀 ProReadmeGen
+
+[![ProReadmeGen Banner](https://github.com/ZainulabdeenOfficial/ProReadmeGen/blob/main/repobannersvg.svg?raw=true)](https://github.com/ZainulabdeenOfficial/ProReadmeGen)
+
+A powerful GitHub Profile README Generator with real-time stats and customization...
+
 # 🚀 GitHub Profile README Generator
 
 A dynamic, beautiful web application that generates stunning GitHub Profile READMEs with **real-time data** from the GitHub API. Built with Next.js, TypeScript, and Tailwind CSS - optimized for Vercel deployment.
@@ -147,6 +153,21 @@ Our generator creates READMEs with **12 comprehensive sections**:
 - **Shields.io** - Custom badges and icons
 - **Real-time Services** - Live visitor counts and typing animations
 
+## 🔧 Project Workflow
+
+```mermaid
+graph TD;
+    A[User Enters GitHub Username] --> B[Fetch GitHub Data]
+    B --> C{Is User Valid?}
+    C -->|Yes| D[Build Components]
+    C -->|No| H[Show Error Message]
+    D --> E[Render Preview]
+    E --> F[Generate Markdown]
+    F --> G[Copy or Download README]
+```
+---
+
+
 ### **Key Features**
 - **Server-Side Rendering** - Fast initial page loads
 - **Client-Side Interactions** - Dynamic user experience
@@ -180,14 +201,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Vercel** - For excellent hosting and deployment experience
 - **GitHub Community** - For inspiration and feedback
 - **Open Source Contributors** - For making this project possible
-
-## 🔗 Links
-
-- **Live Demo**: [https://github-readme-generator.vercel.app](https://github-readme-generator.vercel.app)
-- **GitHub Repository**: [https://github.com/yourusername/github-readme-generator](https://github.com/yourusername/github-readme-generator)
-- **Issue Tracker**: [Report bugs or request features](https://github.com/yourusername/github-readme-generator/issues)
-
----
 
 <div align="center">
 
