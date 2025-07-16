@@ -5,7 +5,7 @@ const GITHUB_API_BASE = 'https://api.github.com'
 
 // Utility function to escape URLs for XML/HTML context
 function escapeUrlForXml(url: string): string {
-  return url.replace(/&/g, '&amp;')
+  return url.replace(/&/g, '&')
 }
 
 // GitHub API client with optional token
