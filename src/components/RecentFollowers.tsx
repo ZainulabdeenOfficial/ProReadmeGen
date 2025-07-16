@@ -20,7 +20,7 @@ interface RecentFollowersProps {
 
 // Utility function to escape URLs for XML/HTML context
 const escapeUrlForXml = (url: string): string => {
-  return url.replace(/&/g, '&amp;')
+  return url.replace(/&/g, '&')
 }
 
 // Helper function to get follower count

@@ -63,7 +63,7 @@ import SocialWidgets from './SocialWidgets'
 
 // Utility function to escape URLs for XML/HTML context
 function escapeUrlForXml(url: string): string {
-  return url.replace(/&/g, '&amp;')
+  return url.replace(/&/g, '&')
 }
 
 // Utility function to properly encode badge URLs for shields.io
